@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Date Cycle Finder</title>
+
+  <style>
+    :root {
+      --bg: #f9f9f9;
+      --card: #ffffff;
+      --text: #000000;
+      --border: #cccccc;
+      --accent: #2196F3;
+      --perfect: #d4edda;
+      --next: #e7f3ff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1e1e1e;
+        --text: #ffffff;
+        --border: #444;
+        --accent: #64b5f6;
+        --perfect: #1b5e20;
+        --next: #0d47a1;
+      }
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      padding: 15px;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: var(--card);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 5px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-sizing: border-box;
+      background: var(--card);
+      color: var(--text);
+    }
+
+    input[type="checkbox"] {
+      width: auto;
+      transform: scale(1.3);
+      margin-right: 10px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      margin-top: 15px;
+      font-weight: bold;
+      position: sticky;
+      bottom: 10px;
+    }
+
+    .next-cycle {
+      margin-top: 15px;
+      padding: 12px;
+      background: var(--next);
+      border-left: 4px solid var(--accent);
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .results {
+      margin-top: 15px;
+    }
+
+    .result-item {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px;
+    }
+
+    .perfect {
+      background-color: var(--perfect);
+      font-weight: bold;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+<h2>📅 Date Cycle Finder</h2>
+
+<label>Select a date:</label>
+<input type="date" id="inputDate">
+
+<label>Search direction:</label>
+<select id="direction">
+  <option value="past">Past (default)</option>
+  <option value="future">Future</option>
+</select>
+
+<div class="checkbox-row">
+  <input type="checkbox" id="sameCalendar">
+  <label for="sameCalendar">Same leap-year pattern</label>
+</div>
+
+<label>Number of matches:</label>
+<input type="number" id="limit" value="10" min="1">
+
+<button onclick="findMatches()">Find Matches</button>
+
+<div id="nextCycle" class="next-cycle" style="display:none;"></div>
+
+<div class="results" id="results"></div>
+
+</div>
+
+<script>
+function isLeapYear(year) {
+  return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+}
+
+function sameCalendarStructure(year1, year2) {
+  return isLeapYear(year1) === isLeapYear(year2);
+}
+
+function isPerfectCycle(baseYear, testYear) {
+  const diff = Math.abs(baseYear - testYear);
+  return diff % 28 === 0 && sameCalendarStructure(baseYear, testYear);
+}
+
+// Format date as YYYY-MM-DD
+function formatDate(dateObj) {
+  const yyyy = dateObj.getFullYear();
+  const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const dd = String(dateObj.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+// Set today
+function setToday() {
+  const today = new Date();
+  document.getElementById("inputDate").value = formatDate(today);
+}
+
+function findNextPerfectCycle(baseDate) {
+  const baseYear = baseDate.getFullYear();
+  const month = baseDate.getMonth();
+  const date = baseDate.getDate();
+  const weekday = baseDate.getDay();
+
+  let year = baseYear;
+
+  while (true) {
+    year++;
+
+    const testDate = new Date(year, month, date);
+
+    if (testDate.getMonth() !== month) continue;
+
+    if (
+      testDate.getDay() === weekday &&
+      isPerfectCycle(baseYear, year)
+    ) {
+      return testDate;
+    }
+  }
+}
+
+function findMatches() {
+  const input = document.getElementById("inputDate").value;
+  const direction = document.getElementById("direction").value;
+  const sameCalendar = document.getElementById("sameCalendar").checked;
+  const limit = parseInt(document.getElementById("limit").value);
+
+  const resultsDiv = document.getElementById("results");
+  const nextCycleDiv = document.getElementById("nextCycle");
+
+  resultsDiv.innerHTML = "";
+  nextCycleDiv.style.display = "none";
+
+  if (!input) {
+    resultsDiv.innerHTML = "Please select a date.";
+    return;
+  }
+
+  const baseDate = new Date(input);
+  const targetDay = baseDate.getDay();
+  const baseYear = baseDate.getFullYear();
+  const month = baseDate.getMonth();
+  const date = baseDate.getDate();
+
+  const nextPerfect = findNextPerfectCycle(baseDate);
+  const offset = nextPerfect.getFullYear() - baseYear;
+
+  nextCycleDiv.style.display = "block";
+  nextCycleDiv.textContent =
+    "⭐ Next Perfect Repeat: " +
+    formatDate(nextPerfect) +
+    " (+" + offset + " years)";
+
+  let year = baseYear;
+  let count = 0;
+
+  while (count < limit) {
+    year += (direction === "past" ? -1 : 1);
+
+    const newDate = new Date(year, month, date);
+
+    if (newDate.getMonth() !== month) continue;
+
+    if (newDate.getDay() === targetDay) {
+      if (sameCalendar && !sameCalendarStructure(baseYear, year)) {
+        continue;
+      }
+
+      const diff = Math.abs(year - baseYear);
+      const perfect = isPerfectCycle(baseYear, year);
+
+      const div = document.createElement("div");
+      div.className = "result-item";
+
+      if (perfect) div.classList.add("perfect");
+
+      div.textContent =
+        formatDate(newDate) +
+        " (Offset: " + diff + "y)" +
+        (perfect ? " ⭐" : "");
+
+      resultsDiv.appendChild(div);
+      count++;
+    }
+  }
+}
+
+window.onload = setToday;
+</script>
+
+</body>
+</html>
