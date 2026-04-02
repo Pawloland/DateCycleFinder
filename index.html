@@ -36,9 +36,7 @@
       color: var(--text);
     }
 
-    h2 {
-      text-align: center;
-    }
+    h2 { text-align: center; }
 
     .container {
       max-width: 500px;
@@ -49,11 +47,7 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
-    label {
-      font-weight: bold;
-      margin-top: 10px;
-      display: block;
-    }
+    label { font-weight: bold; margin-top: 10px; display: block; }
 
     input, select, button {
       width: 100%;
@@ -73,11 +67,7 @@
       margin-right: 10px;
     }
 
-    .checkbox-row {
-      display: flex;
-      align-items: center;
-      margin-top: 10px;
-    }
+    .checkbox-row { display: flex; align-items: center; margin-top: 10px; }
 
     button {
       background: var(--accent);
@@ -98,9 +88,7 @@
       font-weight: bold;
     }
 
-    .results {
-      margin-top: 15px;
-    }
+    .results { margin-top: 15px; }
 
     .result-item {
       padding: 10px;
@@ -160,7 +148,6 @@ function isPerfectCycle(baseYear, testYear) {
   return diff % 28 === 0 && sameCalendarStructure(baseYear, testYear);
 }
 
-// Format date as YYYY-MM-DD
 function formatDate(dateObj) {
   const yyyy = dateObj.getFullYear();
   const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -168,10 +155,11 @@ function formatDate(dateObj) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-// Set today
-function setToday() {
+// Set today's date & enable same leap-year pattern by default
+function initialize() {
   const today = new Date();
   document.getElementById("inputDate").value = formatDate(today);
+  document.getElementById("sameCalendar").checked = true;
 }
 
 function findNextPerfectCycle(baseDate) {
@@ -184,17 +172,9 @@ function findNextPerfectCycle(baseDate) {
 
   while (true) {
     year++;
-
     const testDate = new Date(year, month, date);
-
     if (testDate.getMonth() !== month) continue;
-
-    if (
-      testDate.getDay() === weekday &&
-      isPerfectCycle(baseYear, year)
-    ) {
-      return testDate;
-    }
+    if (testDate.getDay() === weekday && isPerfectCycle(baseYear, year)) return testDate;
   }
 }
 
@@ -226,9 +206,7 @@ function findMatches() {
 
   nextCycleDiv.style.display = "block";
   nextCycleDiv.textContent =
-    "⭐ Next Perfect Repeat: " +
-    formatDate(nextPerfect) +
-    " (+" + offset + " years)";
+    "⭐ Next Perfect Repeat: " + formatDate(nextPerfect) + " (+" + offset + " years)";
 
   let year = baseYear;
   let count = 0;
@@ -237,34 +215,24 @@ function findMatches() {
     year += (direction === "past" ? -1 : 1);
 
     const newDate = new Date(year, month, date);
-
     if (newDate.getMonth() !== month) continue;
+    if (newDate.getDay() !== targetDay) continue;
+    if (sameCalendar && !sameCalendarStructure(baseYear, year)) continue;
 
-    if (newDate.getDay() === targetDay) {
-      if (sameCalendar && !sameCalendarStructure(baseYear, year)) {
-        continue;
-      }
+    const diff = Math.abs(year - baseYear);
+    const perfect = isPerfectCycle(baseYear, year);
 
-      const diff = Math.abs(year - baseYear);
-      const perfect = isPerfectCycle(baseYear, year);
+    const div = document.createElement("div");
+    div.className = "result-item";
+    if (perfect) div.classList.add("perfect");
+    div.textContent = formatDate(newDate) + " (Offset: " + diff + "y)" + (perfect ? " ⭐" : "");
 
-      const div = document.createElement("div");
-      div.className = "result-item";
-
-      if (perfect) div.classList.add("perfect");
-
-      div.textContent =
-        formatDate(newDate) +
-        " (Offset: " + diff + "y)" +
-        (perfect ? " ⭐" : "");
-
-      resultsDiv.appendChild(div);
-      count++;
-    }
+    resultsDiv.appendChild(div);
+    count++;
   }
 }
 
-window.onload = setToday;
+window.onload = initialize;
 </script>
 
 </body>
