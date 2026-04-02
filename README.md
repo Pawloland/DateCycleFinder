@@ -1,6 +1,6 @@
 # 📅 Date Cycle Finder
 
-https://pawloland.github.io/DateFinder/
+https://pawloland.github.io/DateCycleFinder/
 
 ## What is this?
 
